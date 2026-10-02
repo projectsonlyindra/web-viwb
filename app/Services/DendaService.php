@@ -6,9 +6,20 @@ use Carbon\Carbon;
 
 class DendaService
 {
+    private static ?Carbon $cachedNow = null;
+
+    public static function clearCache(): void
+    {
+        self::$cachedNow = null;
+    }
+
     public function hitungDenda(Carbon $tanggalJatuhTempo, int $dendaHarian, int $dendaMaksimal, ?Carbon $today = null): int
     {
-        $today ??= now();
+        if ($dendaHarian <= 0 || $dendaMaksimal <= 0) {
+            return 0;
+        }
+
+        $today ??= (self::$cachedNow ??= now());
 
         if ($today->lte($tanggalJatuhTempo)) {
             return 0;

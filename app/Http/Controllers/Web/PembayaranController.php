@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePembayaranRequest;
 use App\Models\Pembayaran;
 use App\Models\Tagihan;
+use App\Services\DendaService;
 use App\Services\PembayaranService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,10 @@ use Inertia\Response;
 
 class PembayaranController extends Controller
 {
-    public function __construct(private PembayaranService $pembayaranService) {}
+    public function __construct(
+        private PembayaranService $pembayaranService,
+        private DendaService $dendaService,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -27,6 +31,12 @@ class PembayaranController extends Controller
                 ->whereIn('status', ['BELUM_BAYAR', 'SEBAGIAN'])
                 ->orderBy('periode')
                 ->get()
+                ->map(function (Tagihan $t) {
+                    $t->denda = $this->dendaService->hitungDenda($t->tanggal_jatuh_tempo, $t->denda_harian, $t->denda_maksimal);
+                    $t->total = $t->nominal + $t->denda;
+
+                    return $t;
+                })
             : [];
 
         return Inertia::render('Pembayaran/Index', [
@@ -39,8 +49,13 @@ class PembayaranController extends Controller
 
     public function store(StorePembayaranRequest $request): RedirectResponse
     {
+        $wargaId = $request->user()->warga_id;
+        if (! $wargaId) {
+            return back()->withErrors(['tagihan_ids' => 'Akun Anda belum terhubung dengan data profil warga.']);
+        }
+
         $this->pembayaranService->create(
-            $request->user()->warga_id,
+            $wargaId,
             $request->input('tagihan_ids'),
             $request->file('bukti'),
             $request->input('catatan'),

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Pengaturan;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,6 +37,11 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
+            'pengaturan' => [
+                'laporan_terbuka_ke_warga' => (bool) Pengaturan::get('laporan_terbuka_ke_warga', false),
+                'tagihan_terbuka_ke_warga' => (bool) Pengaturan::get('tagihan_terbuka_ke_warga', false),
             ],
         ];
     }

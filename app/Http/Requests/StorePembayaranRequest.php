@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Role;
 use App\Models\Pembayaran;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -20,5 +21,14 @@ class StorePembayaranRequest extends FormRequest
             'bukti' => ['nullable', 'file', 'image', 'max:2048'],
             'catatan' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->user()->role === Role::WARGA && ! $this->user()->warga_id) {
+                $validator->errors()->add('tagihan_ids', 'Akun Anda belum terhubung dengan data profil warga.');
+            }
+        });
     }
 }

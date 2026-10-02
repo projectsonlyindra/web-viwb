@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'warga_id', 'total_dibayar', 'bukti_url', 'catatan', 'status',
-    'dikonfirmasi_oleh_id', 'dikonfirmasi_at',
+    'dikonfirmasi_oleh_id', 'dikonfirmasi_at', 'catatan_review',
 ])]
 class Pembayaran extends Model
 {
@@ -29,7 +29,7 @@ class Pembayaran extends Model
 
     public function warga(): BelongsTo
     {
-        return $this->belongsTo(Warga::class);
+        return $this->belongsTo(Warga::class)->withTrashed();
     }
 
     public function dikonfirmasiOleh(): BelongsTo

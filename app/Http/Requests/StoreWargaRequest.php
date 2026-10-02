@@ -6,7 +6,6 @@ use App\Enums\JenisKendaraan;
 use App\Enums\StatusWarga;
 use App\Models\Warga;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 class StoreWargaRequest extends FormRequest

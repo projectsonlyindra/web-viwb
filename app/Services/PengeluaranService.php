@@ -8,6 +8,7 @@ use App\Models\Pengeluaran;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 
 class PengeluaranService
 {
@@ -30,19 +31,25 @@ class PengeluaranService
     {
         $isAutoApprove = $pembuat->role === Role::SUPERADMIN;
 
-        return Pengeluaran::query()->create([
+        $pengeluaran = Pengeluaran::query()->create([
             ...$data,
-            'bukti_url' => $bukti?->store('bukti-pengeluaran', 'public'),
+            'bukti_url' => $bukti?->store('bukti-pengeluaran/'.$pembuat->id, 'public'),
             'dibuat_oleh_id' => $pembuat->id,
             'status' => $isAutoApprove ? StatusPengeluaran::APPROVED : StatusPengeluaran::DRAFT,
             'disetujui_oleh_id' => $isAutoApprove ? $pembuat->id : null,
             'disetujui_at' => $isAutoApprove ? now() : null,
         ]);
+
+        Log::info("Pengeluaran ID: {$pengeluaran->id} kategori '{$pengeluaran->kategori}' nominal Rp{$pengeluaran->nominal} dibuat oleh User ID: {$pembuat->id} ({$pembuat->name}).");
+
+        return $pengeluaran;
     }
 
     public function submitApproval(Pengeluaran $pengeluaran): Pengeluaran
     {
         $pengeluaran->update(['status' => StatusPengeluaran::MENUNGGU_APPROVAL]);
+
+        Log::info("Pengeluaran ID: {$pengeluaran->id} diajukan untuk approval.");
 
         $penerima = User::query()
             ->whereIn('role', [Role::SUPERADMIN, Role::KETUA_RT])
@@ -69,6 +76,8 @@ class PengeluaranService
             'disetujui_at' => now(),
         ]);
 
+        Log::info("Pengeluaran ID: {$pengeluaran->id} nominal Rp{$pengeluaran->nominal} disetujui oleh User ID: {$approver->id} ({$approver->name}).");
+
         return $pengeluaran;
     }
 
@@ -80,6 +89,8 @@ class PengeluaranService
             'disetujui_at' => now(),
             'catatan_review' => $catatan,
         ]);
+
+        Log::warning("Pengeluaran ID: {$pengeluaran->id} nominal Rp{$pengeluaran->nominal} ditolak oleh User ID: {$approver->id} ({$approver->name}). Catatan: {$catatan}");
 
         return $pengeluaran;
     }

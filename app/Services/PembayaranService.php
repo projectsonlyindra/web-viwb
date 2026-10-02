@@ -11,6 +11,8 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class PembayaranService
 {
@@ -33,8 +35,6 @@ class PembayaranService
     }
 
     /**
-     * Catat pembayaran untuk satu atau lebih tagihan sekaligus.
-     *
      * @param  int[]  $tagihanIds
      */
     public function create(int $wargaId, array $tagihanIds, ?UploadedFile $bukti, ?string $catatan): Pembayaran
@@ -43,7 +43,14 @@ class PembayaranService
             $tagihan = Tagihan::query()
                 ->whereKey($tagihanIds)
                 ->where('warga_id', $wargaId)
+                ->whereIn('status', [StatusTagihan::BELUM_BAYAR, StatusTagihan::SEBAGIAN])
                 ->get();
+
+            if ($tagihan->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'tagihan_ids' => 'Tidak ada tagihan valid yang belum lunas untuk dibayarkan.',
+                ]);
+            }
 
             $totalDibayar = 0;
             $items = [];
@@ -58,7 +65,7 @@ class PembayaranService
                 ];
             }
 
-            $buktiUrl = $bukti?->store('bukti-pembayaran', 'public');
+            $buktiUrl = $bukti?->store('bukti-pembayaran/'.$wargaId, 'public');
 
             $pembayaran = Pembayaran::query()->create([
                 'warga_id' => $wargaId,
@@ -89,6 +96,8 @@ class PembayaranService
                 $item->tagihan->update(['status' => StatusTagihan::LUNAS]);
             }
 
+            Log::info("Pembayaran ID: {$pembayaran->id} warga ID: {$pembayaran->warga_id} total Rp{$pembayaran->total_dibayar} dikonfirmasi oleh User ID: {$confirmedBy->id} ({$confirmedBy->name}).");
+
             $this->wahaService->sendText(
                 $pembayaran->warga->no_wa,
                 "Pembayaran Anda sebesar Rp{$pembayaran->total_dibayar} telah dikonfirmasi. Terima kasih."
@@ -102,10 +111,12 @@ class PembayaranService
     {
         $pembayaran->update([
             'status' => StatusPembayaran::DITOLAK,
-            'catatan' => $catatan,
+            'catatan_review' => $catatan,
         ]);
 
         $pembayaran->load('warga');
+
+        Log::warning("Pembayaran ID: {$pembayaran->id} warga ID: {$pembayaran->warga_id} ditolak. Alasan: {$catatan}");
 
         $this->wahaService->sendText(
             $pembayaran->warga->no_wa,

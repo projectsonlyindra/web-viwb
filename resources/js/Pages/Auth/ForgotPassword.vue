@@ -60,7 +60,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Email Password Reset Link
+                    {{ form.processing ? 'Mengirim...' : 'Kirim Tautan Reset Password' }}
                 </PrimaryButton>
             </div>
         </form>

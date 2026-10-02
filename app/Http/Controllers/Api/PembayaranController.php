@@ -22,8 +22,15 @@ class PembayaranController extends Controller
 
     public function store(StorePembayaranRequest $request): JsonResponse
     {
+        $wargaId = $request->user()->warga_id;
+        if (! $wargaId) {
+            return response()->json([
+                'message' => 'Akun Anda belum terhubung dengan data profil warga.',
+            ], 422);
+        }
+
         $pembayaran = $this->pembayaranService->create(
-            $request->user()->warga_id,
+            $wargaId,
             $request->input('tagihan_ids'),
             $request->file('bukti'),
             $request->input('catatan'),

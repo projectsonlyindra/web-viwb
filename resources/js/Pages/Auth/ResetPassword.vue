@@ -93,7 +93,7 @@ const submit = () => {
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Reset Password
+                    {{ form.processing ? 'Menyimpan...' : 'Reset Password' }}
                 </PrimaryButton>
             </div>
         </form>

@@ -91,7 +91,9 @@ const form = useForm({
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <PrimaryButton :disabled="form.processing">
+                    {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
+                </PrimaryButton>
 
                 <Transition
                     enter-active-class="transition ease-in-out"

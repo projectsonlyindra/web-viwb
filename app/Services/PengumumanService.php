@@ -9,6 +9,7 @@ use App\Models\BroadcastLog;
 use App\Models\Pengumuman;
 use App\Models\Warga;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 
 class PengumumanService
 {
@@ -36,17 +37,28 @@ class PengumumanService
         Warga::query()
             ->where('status_warga', StatusWarga::AKTIF->value)
             ->when($targetBlok, fn ($q, $blok) => $q->where('unit_id', 'like', "{$blok}%"))
-            ->each(function (Warga $warga) use ($pengumuman) {
-                BroadcastJob::query()->create([
-                    'pengumuman_id' => $pengumuman->id,
-                    'no_wa' => $warga->no_wa,
-                    'warga_id' => $warga->id,
-                    'pesan' => "{$pengumuman->judul}\n\n{$pengumuman->isi}",
-                    'jenis' => 'pengumuman',
-                    'status' => StatusBroadcastJob::PENDING,
-                    'scheduled_at' => now(),
-                ]);
+            ->chunk(100, function ($wargas) use ($pengumuman) {
+                $jobs = [];
+                $now = now();
+                foreach ($wargas as $warga) {
+                    $jobs[] = [
+                        'pengumuman_id' => $pengumuman->id,
+                        'no_wa' => $warga->no_wa,
+                        'warga_id' => $warga->id,
+                        'pesan' => "{$pengumuman->judul}\n\n{$pengumuman->isi}",
+                        'jenis' => 'pengumuman',
+                        'status' => StatusBroadcastJob::PENDING->value,
+                        'scheduled_at' => $now,
+                        'created_at' => $now,
+                    ];
+                }
+
+                if (! empty($jobs)) {
+                    BroadcastJob::query()->insert($jobs);
+                }
             });
+
+        Log::info("Pengumuman dibuat: ID {$pengumuman->id}, Judul '{$pengumuman->judul}'.");
 
         return $pengumuman;
     }

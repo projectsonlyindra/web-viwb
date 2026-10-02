@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\Role;
+use App\Models\Pengaturan;
 use App\Models\Pengeluaran;
 use App\Models\User;
 
@@ -10,12 +11,20 @@ class PengeluaranPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        if (in_array($user->role, [Role::SUPERADMIN, Role::KETUA_RT, Role::BENDAHARA], true)) {
+            return true;
+        }
+
+        return (bool) Pengaturan::get('laporan_terbuka_ke_warga', false);
     }
 
     public function view(User $user, Pengeluaran $pengeluaran): bool
     {
-        return true;
+        if (in_array($user->role, [Role::SUPERADMIN, Role::KETUA_RT, Role::BENDAHARA], true)) {
+            return true;
+        }
+
+        return (bool) Pengaturan::get('laporan_terbuka_ke_warga', false);
     }
 
     /**

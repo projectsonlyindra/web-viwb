@@ -2,10 +2,12 @@
 import { ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Shared/Layouts/AuthenticatedLayout.vue';
+import InputError from '@/Shared/Components/InputError.vue';
 import InputLabel from '@/Shared/Components/InputLabel.vue';
 import PrimaryButton from '@/Shared/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Shared/Components/SecondaryButton.vue';
 import TextInput from '@/Shared/Components/TextInput.vue';
+import { formatStatus } from '@/lib/utils';
 
 const props = defineProps({
     tagihan: Array,
@@ -76,8 +78,11 @@ function formatTanggal(tanggal) {
                                 type="month"
                                 class="mt-1 block"
                             />
+                            <InputError :message="generateForm.errors.periode" class="mt-1" />
                         </div>
-                        <PrimaryButton :disabled="generateForm.processing">Generate</PrimaryButton>
+                        <PrimaryButton :disabled="generateForm.processing">
+                            {{ generateForm.processing ? 'Memproses...' : 'Generate' }}
+                        </PrimaryButton>
                     </form>
                 </div>
 
@@ -127,22 +132,23 @@ function formatTanggal(tanggal) {
                 </div>
 
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm" aria-label="Daftar Tagihan Iuran">
+                        <caption class="sr-only">Tabel Tagihan Iuran Warga</caption>
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500">Warga</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500">Jenis</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500">Periode</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500">Jatuh Tempo</th>
-                                <th class="px-4 py-3 text-right font-medium text-gray-500">Nominal</th>
-                                <th class="px-4 py-3 text-right font-medium text-gray-500">Denda</th>
-                                <th class="px-4 py-3 text-right font-medium text-gray-500">Total</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500">Status</th>
+                                <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Warga</th>
+                                <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Jenis</th>
+                                <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Periode</th>
+                                <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Jatuh Tempo</th>
+                                <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Nominal</th>
+                                <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Denda</th>
+                                <th scope="col" class="px-4 py-3 text-right font-medium text-gray-500">Total</th>
+                                <th scope="col" class="px-4 py-3 text-left font-medium text-gray-500">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             <tr v-for="t in tagihan" :key="t.id">
-                                <td class="px-4 py-3">{{ t.warga.unit_id }} - {{ t.warga.nama }}</td>
+                                <td class="px-4 py-3">{{ t.warga?.unit_id ?? '-' }} - {{ t.warga?.nama ?? 'Warga Nonaktif' }}</td>
                                 <td class="px-4 py-3">{{ t.jenis }}</td>
                                 <td class="px-4 py-3">{{ t.periode }}</td>
                                 <td class="px-4 py-3">{{ formatTanggal(t.tanggal_jatuh_tempo) }}</td>
@@ -151,11 +157,28 @@ function formatTanggal(tanggal) {
                                     {{ formatRupiah(t.denda) }}
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium">{{ formatRupiah(t.total) }}</td>
-                                <td class="px-4 py-3">{{ t.status }}</td>
+                                <td class="px-4 py-3">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                        :class="{
+                                            'bg-green-100 text-green-800': t.status === 'LUNAS',
+                                            'bg-yellow-100 text-yellow-800': t.status === 'SEBAGIAN',
+                                            'bg-red-100 text-red-800': t.status === 'BELUM_BAYAR',
+                                        }"
+                                    >
+                                        {{ formatStatus(t.status) }}
+                                    </span>
+                                </td>
                             </tr>
                             <tr v-if="tagihan.length === 0">
-                                <td colspan="8" class="px-4 py-6 text-center text-gray-400">
-                                    Belum ada tagihan.
+                                <td colspan="8" class="px-4 py-10 text-center text-gray-500">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <svg class="h-10 w-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <p class="font-medium text-gray-700">Belum ada data tagihan</p>
+                                        <p class="text-xs text-gray-400 mt-1">Daftar tagihan bulanan warga akan ditampilkan di sini.</p>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

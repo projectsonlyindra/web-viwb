@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
+use App\Models\Pengaturan;
 use App\Models\Pengeluaran;
 use App\Models\Tagihan;
 use App\Services\DendaService;
@@ -19,6 +21,14 @@ class LaporanController extends Controller
 
     public function index(Request $request): Response
     {
+        $user = $request->user();
+        $isPengurus = in_array($user->role, [Role::SUPERADMIN, Role::KETUA_RT, Role::BENDAHARA], true);
+        $terbukaKeWarga = (bool) Pengaturan::get('laporan_terbuka_ke_warga', false);
+
+        if (! $isPengurus) {
+            abort_unless($user->role === Role::WARGA && $terbukaKeWarga, 403, 'Akses laporan keuangan tidak diizinkan.');
+        }
+
         $periode = $request->input('periode', now()->format('Y-m'));
         $awalBulan = Carbon::parse($periode.'-01')->startOfDay();
         $akhirBulan = $awalBulan->copy()->endOfMonth()->endOfDay();
@@ -57,11 +67,14 @@ class LaporanController extends Controller
             'totalPendapatan' => $totalPendapatan,
             'totalPengeluaran' => $totalPengeluaran,
             'saldo' => $totalPendapatan - $totalPengeluaran,
+            'isReadOnly' => ! $isPengurus,
         ]);
     }
 
     public function export(Request $request): StreamedResponse
     {
+        abort_unless(in_array($request->user()->role, [Role::SUPERADMIN, Role::KETUA_RT, Role::BENDAHARA], true), 403);
+
         $periode = $request->input('periode', now()->format('Y-m'));
 
         $tagihan = Tagihan::query()->with('warga')->where('periode', $periode)->orderBy('warga_id')->get();
@@ -72,13 +85,13 @@ class LaporanController extends Controller
 
             foreach ($tagihan as $t) {
                 fputcsv($handle, [
-                    $t->warga->unit_id,
-                    $t->warga->nama,
+                    $t->warga?->unit_id ?? '-',
+                    $t->warga?->nama ?? 'Warga Nonaktif',
                     $t->jenis->value,
                     $t->periode,
                     $t->nominal,
                     $t->status->value,
-                    $t->tanggal_jatuh_tempo->format('Y-m-d'),
+                    $t->tanggal_jatuh_tempo?->format('Y-m-d') ?? '-',
                 ]);
             }
 

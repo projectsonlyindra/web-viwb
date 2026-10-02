@@ -17,6 +17,8 @@ class PengeluaranController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Pengeluaran::class);
+
         $user = $request->user();
 
         return Inertia::render('Pengeluaran/Index', [

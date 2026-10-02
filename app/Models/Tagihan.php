@@ -32,7 +32,7 @@ class Tagihan extends Model
 
     public function warga(): BelongsTo
     {
-        return $this->belongsTo(Warga::class);
+        return $this->belongsTo(Warga::class)->withTrashed();
     }
 
     public function pembayaranItem(): HasMany

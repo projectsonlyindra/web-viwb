@@ -5,14 +5,16 @@ namespace App\Services;
 use App\Enums\JenisKendaraan;
 use App\Enums\JenisTagihan;
 use App\Enums\Role;
+use App\Enums\StatusTagihan;
 use App\Enums\StatusWarga;
 use App\Models\KonfigurasiLayanan;
+use App\Models\Pengaturan;
 use App\Models\Tagihan;
 use App\Models\User;
 use App\Models\Warga;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Support\Facades\Log;
 
 class TagihanService
 {
@@ -34,35 +36,39 @@ class TagihanService
 
         Warga::query()
             ->where('status_warga', StatusWarga::AKTIF->value)
-            ->each(function (Warga $warga) use ($konfigurasi, $periode, &$dibuat, &$diperbarui) {
-                // Keamanan: wajib untuk semua warga.
-                $keamanan = $konfigurasi->get(JenisTagihan::KEAMANAN->value);
-                if ($keamanan) {
-                    $nominal = $warga->jenis_kendaraan === JenisKendaraan::MOBIL
-                        ? $keamanan->nominal_mobil
-                        : $keamanan->nominal_tanpa_mobil;
+            ->chunk(100, function ($wargas) use ($konfigurasi, $periode, &$dibuat, &$diperbarui) {
+                foreach ($wargas as $warga) {
+                    // Keamanan: wajib untuk semua warga.
+                    $keamanan = $konfigurasi->get(JenisTagihan::KEAMANAN->value);
+                    if ($keamanan) {
+                        $nominal = $warga->jenis_kendaraan === JenisKendaraan::MOBIL
+                            ? $keamanan->nominal_mobil
+                            : $keamanan->nominal_tanpa_mobil;
 
-                    $this->buatTagihan($warga, JenisTagihan::KEAMANAN, $periode, $nominal, $keamanan, $dibuat, $diperbarui);
-                }
+                        $this->buatTagihan($warga, JenisTagihan::KEAMANAN, $periode, $nominal, $keamanan, $dibuat, $diperbarui);
+                    }
 
-                // Paguyuban: wajib untuk semua warga.
-                $paguyuban = $konfigurasi->get(JenisTagihan::PAGUYUBAN->value);
-                if ($paguyuban) {
-                    $this->buatTagihan($warga, JenisTagihan::PAGUYUBAN, $periode, $paguyuban->nominal, $paguyuban, $dibuat, $diperbarui);
-                }
+                    // Paguyuban: wajib untuk semua warga.
+                    $paguyuban = $konfigurasi->get(JenisTagihan::PAGUYUBAN->value);
+                    if ($paguyuban) {
+                        $this->buatTagihan($warga, JenisTagihan::PAGUYUBAN, $periode, $paguyuban->nominal, $paguyuban, $dibuat, $diperbarui);
+                    }
 
-                // HIPPAM: opsional, lewati jika warga tidak ikut.
-                $hippam = $konfigurasi->get(JenisTagihan::HIPPAM->value);
-                if ($hippam && $warga->ikut_hippam) {
-                    $this->buatTagihan($warga, JenisTagihan::HIPPAM, $periode, $hippam->nominal, $hippam, $dibuat, $diperbarui);
-                }
+                    // HIPPAM: opsional, lewati jika warga tidak ikut.
+                    $hippam = $konfigurasi->get(JenisTagihan::HIPPAM->value);
+                    if ($hippam && $warga->ikut_hippam) {
+                        $this->buatTagihan($warga, JenisTagihan::HIPPAM, $periode, $hippam->nominal, $hippam, $dibuat, $diperbarui);
+                    }
 
-                // Kebersihan: opsional, lewati jika warga tidak ikut.
-                $kebersihan = $konfigurasi->get(JenisTagihan::KEBERSIHAN->value);
-                if ($kebersihan && $warga->ikut_kebersihan) {
-                    $this->buatTagihan($warga, JenisTagihan::KEBERSIHAN, $periode, $kebersihan->nominal, $kebersihan, $dibuat, $diperbarui);
+                    // Kebersihan: opsional, lewati jika warga tidak ikut.
+                    $kebersihan = $konfigurasi->get(JenisTagihan::KEBERSIHAN->value);
+                    if ($kebersihan && $warga->ikut_kebersihan) {
+                        $this->buatTagihan($warga, JenisTagihan::KEBERSIHAN, $periode, $kebersihan->nominal, $kebersihan, $dibuat, $diperbarui);
+                    }
                 }
             });
+
+        Log::info("Generate tagihan bulanan: Periode {$periode}, Dibuat: {$dibuat}, Diperbarui: {$diperbarui}.");
 
         return ['dibuat' => $dibuat, 'diperbarui' => $diperbarui];
     }
@@ -124,7 +130,10 @@ class TagihanService
         $query = Tagihan::query()->with('warga');
 
         if ($user->role === Role::WARGA) {
-            $query->where('warga_id', $user->warga_id);
+            $tagihanTerbuka = (bool) Pengaturan::get('tagihan_terbuka_ke_warga', false);
+            if (! $tagihanTerbuka) {
+                $query->where('warga_id', $user->warga_id);
+            }
         } elseif ($user->role === Role::TIM_DIVISI && $user->divisi) {
             $query->where('jenis', $user->divisi->value);
         }
@@ -135,12 +144,17 @@ class TagihanService
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status));
 
         return $query->orderByDesc('periode')->get()->map(function (Tagihan $tagihan) {
-            $tagihan->denda = $this->dendaService->hitungDenda(
-                $tagihan->tanggal_jatuh_tempo,
-                $tagihan->denda_harian,
-                $tagihan->denda_maksimal,
-            );
-            $tagihan->total = $tagihan->nominal + $tagihan->denda;
+            if ($tagihan->status === StatusTagihan::LUNAS) {
+                $tagihan->denda = 0;
+                $tagihan->total = $tagihan->nominal;
+            } else {
+                $tagihan->denda = $this->dendaService->hitungDenda(
+                    $tagihan->tanggal_jatuh_tempo,
+                    $tagihan->denda_harian,
+                    $tagihan->denda_maksimal,
+                );
+                $tagihan->total = $tagihan->nominal + $tagihan->denda;
+            }
 
             return $tagihan;
         });
