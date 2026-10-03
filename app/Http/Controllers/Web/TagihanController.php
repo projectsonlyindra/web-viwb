@@ -19,7 +19,7 @@ class TagihanController extends Controller
         $this->authorize('viewAny', Tagihan::class);
 
         return Inertia::render('Tagihan/Index', [
-            'tagihan' => $this->tagihanService->getList($request->user(), $request->only(['periode', 'jenis', 'status'])),
+            'tagihan' => $this->tagihanService->getList($request->user(), $request->only(['periode', 'jenis', 'status']), 25),
             'filters' => $request->only(['periode', 'jenis', 'status']),
             'canGenerate' => $request->user()->can('create', Tagihan::class),
         ]);

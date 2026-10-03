@@ -1,0 +1,33 @@
+name: web-viwb
+
+services:
+  app:
+    build: .
+    container_name: web-viwb
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - .:/host-src:ro
+      - app_data:/var/www/html
+      - mysql_data:/var/lib/mysql
+
+    environment:
+      - TZ=Asia/Jakarta
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-web-viwb}
+      - MYSQL_USER=${MYSQL_USER:-user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:?Isi MYSQL_PASSWORD di file .env (salin dari .env.example)}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?Isi MYSQL_ROOT_PASSWORD di file .env (salin dari .env.example)}
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1/login >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+
+volumes:
+  app_data:
+  mysql_data:

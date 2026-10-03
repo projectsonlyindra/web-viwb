@@ -17,10 +17,10 @@ class WargaController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Warga::class);
+        $perPage = $request->has('per_page') ? (int) $request->input('per_page') : 25;
+        $warga = $this->wargaService->getList($request->only(['blok', 'status']), $perPage);
 
-        return response()->json([
-            'data' => $this->wargaService->getList($request->only(['blok', 'status'])),
-        ]);
+        return response()->json($warga);
     }
 
     public function store(StoreWargaRequest $request): JsonResponse

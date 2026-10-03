@@ -15,7 +15,10 @@ class PengeluaranController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->pengeluaranService->getList($request->only(['status']))]);
+        $perPage = $request->has('per_page') ? (int) $request->input('per_page') : 25;
+        $pengeluaran = $this->pengeluaranService->getList($request->only(['status']), $perPage);
+
+        return response()->json($pengeluaran);
     }
 
     public function store(StorePengeluaranRequest $request): JsonResponse

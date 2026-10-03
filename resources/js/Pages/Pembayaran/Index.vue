@@ -7,14 +7,17 @@ import InputLabel from '@/Shared/Components/InputLabel.vue';
 import PrimaryButton from '@/Shared/Components/PrimaryButton.vue';
 import DangerButton from '@/Shared/Components/DangerButton.vue';
 import SecondaryButton from '@/Shared/Components/SecondaryButton.vue';
+import Pagination from '@/Shared/Components/Pagination.vue';
 import { formatStatus } from '@/lib/utils';
 
 const props = defineProps({
-    pembayaran: Array,
+    pembayaran: [Object, Array],
     filters: Object,
     tagihanBelumLunas: Array,
     canConfirm: Boolean,
 });
+
+const items = computed(() => Array.isArray(props.pembayaran) ? props.pembayaran : (props.pembayaran?.data ?? []));
 
 function formatRupiah(angka) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -160,7 +163,7 @@ function confirmPembayaran(id) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            <tr v-for="p in pembayaran" :key="p.id">
+                            <tr v-for="p in items" :key="p.id">
                                 <td class="px-4 py-3">
                                     <div>{{ p.warga?.unit_id ?? '-' }} - {{ p.warga?.nama ?? 'Warga Nonaktif' }}</div>
                                     <a
@@ -171,6 +174,12 @@ function confirmPembayaran(id) {
                                     >
                                         Lihat Bukti Transfer
                                     </a>
+                                    <div v-if="p.catatan" class="mt-1 text-xs text-gray-500 italic">
+                                        Catatan Warga: "{{ p.catatan }}"
+                                    </div>
+                                    <div v-if="p.catatan_review" class="mt-1 text-xs text-red-600 bg-red-50 p-1.5 rounded">
+                                        Catatan Review Pengurus: "{{ p.catatan_review }}"
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3">
                                     <div v-for="item in p.item" :key="item.id">
@@ -182,7 +191,7 @@ function confirmPembayaran(id) {
                                     <span
                                         class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
                                         :class="{
-                                            'bg-yellow-100 text-yellow-800': p.status === 'MENUNGGU_KONFIRMASI',
+                                             'bg-yellow-100 text-yellow-800': p.status === 'MENUNGGU_KONFIRMASI',
                                             'bg-green-100 text-green-800': p.status === 'DIKONFIRMASI',
                                             'bg-red-100 text-red-800': p.status === 'DITOLAK',
                                         }"
@@ -226,7 +235,7 @@ function confirmPembayaran(id) {
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="pembayaran.length === 0">
+                            <tr v-if="items.length === 0">
                                 <td colspan="5" class="px-4 py-10 text-center text-gray-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <svg class="h-10 w-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -239,6 +248,7 @@ function confirmPembayaran(id) {
                             </tr>
                         </tbody>
                     </table>
+                    <Pagination :links="pembayaran.links" />
                 </div>
             </div>
         </div>

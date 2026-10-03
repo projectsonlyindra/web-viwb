@@ -5,6 +5,7 @@ import Dropdown from '@/Shared/Components/Dropdown.vue';
 import DropdownLink from '@/Shared/Components/DropdownLink.vue';
 import NavLink from '@/Shared/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Shared/Components/ResponsiveNavLink.vue';
+import ThemeToggle from '@/Shared/Components/ThemeToggle.vue';
 import { Link } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
@@ -12,9 +13,9 @@ const showingNavigationDropdown = ref(false);
 
 <template>
     <div>
-        <div class="min-h-screen bg-gray-100">
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
             <nav
-                class="border-b border-gray-100 bg-white"
+                class="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-200"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -26,7 +27,7 @@ const showingNavigationDropdown = ref(false);
                                     showingNavigationDropdown =
                                         !showingNavigationDropdown
                                 "
-                                class="inline-flex h-11 w-11 items-center justify-center rounded-md p-2 text-gray-500 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-700 focus:bg-gray-100 focus:text-gray-700 focus:outline-none"
+                                class="inline-flex h-11 w-11 items-center justify-center rounded-md p-2 text-gray-500 dark:text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 focus:bg-gray-100 dark:focus:bg-gray-800 focus:text-gray-700 dark:focus:text-gray-200 focus:outline-none"
                                 aria-label="Menu"
                             >
                                 <svg
@@ -67,7 +68,7 @@ const showingNavigationDropdown = ref(false);
                             <div class="flex shrink-0 items-center">
                                 <Link :href="route('dashboard')">
                                     <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
+                                        class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200"
                                     />
                                 </Link>
                             </div>
@@ -131,16 +132,18 @@ const showingNavigationDropdown = ref(false);
                             </div>
                         </div>
 
-                        <!-- Right: Desktop Settings Dropdown -->
+                        <!-- Right: Desktop Settings Dropdown & Theme Toggle -->
                         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                            <ThemeToggle class="me-3" />
+
                             <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
+                            <div class="relative ms-1">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
+                                                class="inline-flex items-center rounded-md border border-transparent bg-white dark:bg-gray-900 px-3 py-2 text-sm font-medium leading-4 text-gray-500 dark:text-gray-300 transition duration-150 ease-in-out hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none"
                                             >
                                                 {{ $page.props.auth.user.name }}
 
@@ -178,8 +181,10 @@ const showingNavigationDropdown = ref(false);
                             </div>
                         </div>
 
-                        <!-- Mobile Right Spacer (Balances Hamburger on left so Logo is truly centered) -->
-                        <div class="h-11 w-11 sm:hidden"></div>
+                        <!-- Mobile Right: Theme Toggle -->
+                        <div class="flex items-center sm:hidden">
+                            <ThemeToggle />
+                        </div>
                     </div>
                 </div>
 
@@ -248,15 +253,15 @@ const showingNavigationDropdown = ref(false);
 
                     <!-- Responsive Settings Options -->
                     <div
-                        class="border-t border-gray-200 pb-1 pt-4"
+                        class="border-t border-gray-200 dark:border-gray-800 pb-1 pt-4"
                     >
                         <div class="px-4">
                             <div
-                                class="text-base font-medium text-gray-800"
+                                class="text-base font-medium text-gray-800 dark:text-gray-200"
                             >
                                 {{ $page.props.auth.user.name }}
                             </div>
-                            <div class="text-sm font-medium text-gray-500">
+                            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
                                 {{ $page.props.auth.user.email }}
                             </div>
                         </div>
@@ -279,7 +284,7 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Heading -->
             <header
-                class="bg-white shadow"
+                class="bg-white dark:bg-gray-800 shadow dark:shadow-gray-950/40 border-b border-gray-100 dark:border-gray-800"
                 v-if="$slots.header"
             >
                 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -290,7 +295,7 @@ const showingNavigationDropdown = ref(false);
             <!-- Page Content -->
             <main id="main-content" role="main">
                 <div v-if="$page.props.flash?.error" class="mx-auto mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="rounded-md bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+                    <div class="rounded-md bg-red-50 dark:bg-red-950/40 p-4 text-sm text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/60">
                         {{ $page.props.flash.error }}
                     </div>
                 </div>

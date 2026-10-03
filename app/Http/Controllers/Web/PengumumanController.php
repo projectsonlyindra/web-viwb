@@ -18,7 +18,7 @@ class PengumumanController extends Controller
     public function index(Request $request): Response
     {
         return Inertia::render('Pengumuman/Index', [
-            'pengumuman' => $this->pengumumanService->getList(),
+            'pengumuman' => $this->pengumumanService->getList(25),
             'canCreate' => $request->user()->can('create', Pengumuman::class),
         ]);
     }

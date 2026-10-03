@@ -15,9 +15,10 @@ class PembayaranController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => $this->pembayaranService->getList($request->user(), $request->only(['status'])),
-        ]);
+        $perPage = $request->has('per_page') ? (int) $request->input('per_page') : 25;
+        $pembayaran = $this->pembayaranService->getList($request->user(), $request->only(['status']), $perPage);
+
+        return response()->json($pembayaran);
     }
 
     public function store(StorePembayaranRequest $request): JsonResponse

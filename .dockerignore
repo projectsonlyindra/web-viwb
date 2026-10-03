@@ -1,0 +1,25 @@
+# Build context exclusions for lean and secure Docker images
+node_modules
+vendor
+storage/logs/*
+!storage/logs/.gitignore
+storage/framework/cache/*
+!storage/framework/cache/.gitignore
+storage/framework/sessions/*
+!storage/framework/sessions/.gitignore
+storage/framework/views/*
+!storage/framework/views/.gitignore
+
+# Version control and tooling
+.git
+.github
+.agents
+.claude
+*.md
+docs/
+
+# Local databases and runtime state
+docker-data/
+.env
+.env.*
+!.env.example

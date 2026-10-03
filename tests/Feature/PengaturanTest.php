@@ -109,7 +109,7 @@ class PengaturanTest extends TestCase
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
             ->component('Tagihan/Index')
-            ->has('tagihan', 1)
+            ->has('tagihan.data', 1)
         );
     }
 
@@ -131,7 +131,7 @@ class PengaturanTest extends TestCase
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
             ->component('Tagihan/Index')
-            ->has('tagihan', 0)
+            ->has('tagihan.data', 0)
         );
     }
 

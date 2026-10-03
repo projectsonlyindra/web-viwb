@@ -21,7 +21,7 @@ class WargaController extends Controller
         $this->authorize('viewAny', Warga::class);
 
         return Inertia::render('Warga/Index', [
-            'warga' => $this->wargaService->getList($request->only(['blok', 'status'])),
+            'warga' => $this->wargaService->getList($request->only(['blok', 'status']), 25),
             'filters' => $request->only(['blok', 'status']),
         ]);
     }

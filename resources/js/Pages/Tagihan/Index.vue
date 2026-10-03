@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Shared/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Shared/Components/InputError.vue';
@@ -7,13 +7,16 @@ import InputLabel from '@/Shared/Components/InputLabel.vue';
 import PrimaryButton from '@/Shared/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Shared/Components/SecondaryButton.vue';
 import TextInput from '@/Shared/Components/TextInput.vue';
+import Pagination from '@/Shared/Components/Pagination.vue';
 import { formatStatus } from '@/lib/utils';
 
 const props = defineProps({
-    tagihan: Array,
+    tagihan: [Object, Array],
     filters: Object,
     canGenerate: Boolean,
 });
+
+const items = computed(() => Array.isArray(props.tagihan) ? props.tagihan : (props.tagihan?.data ?? []));
 
 const periodeFilter = ref(props.filters.periode ?? '');
 const jenisFilter = ref(props.filters.jenis ?? '');
@@ -147,7 +150,7 @@ function formatTanggal(tanggal) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            <tr v-for="t in tagihan" :key="t.id">
+                            <tr v-for="t in items" :key="t.id">
                                 <td class="px-4 py-3">{{ t.warga?.unit_id ?? '-' }} - {{ t.warga?.nama ?? 'Warga Nonaktif' }}</td>
                                 <td class="px-4 py-3">{{ t.jenis }}</td>
                                 <td class="px-4 py-3">{{ t.periode }}</td>
@@ -161,7 +164,7 @@ function formatTanggal(tanggal) {
                                     <span
                                         class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
                                         :class="{
-                                            'bg-green-100 text-green-800': t.status === 'LUNAS',
+                                             'bg-green-100 text-green-800': t.status === 'LUNAS',
                                             'bg-yellow-100 text-yellow-800': t.status === 'SEBAGIAN',
                                             'bg-red-100 text-red-800': t.status === 'BELUM_BAYAR',
                                         }"
@@ -170,7 +173,7 @@ function formatTanggal(tanggal) {
                                     </span>
                                 </td>
                             </tr>
-                            <tr v-if="tagihan.length === 0">
+                            <tr v-if="items.length === 0">
                                 <td colspan="8" class="px-4 py-10 text-center text-gray-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <svg class="h-10 w-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -183,6 +186,7 @@ function formatTanggal(tanggal) {
                             </tr>
                         </tbody>
                     </table>
+                    <Pagination :links="tagihan.links" />
                 </div>
             </div>
         </div>

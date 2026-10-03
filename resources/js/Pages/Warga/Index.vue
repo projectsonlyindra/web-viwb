@@ -9,12 +9,15 @@ import SecondaryButton from '@/Shared/Components/SecondaryButton.vue';
 import DangerButton from '@/Shared/Components/DangerButton.vue';
 import TextInput from '@/Shared/Components/TextInput.vue';
 import Modal from '@/Shared/Components/Modal.vue';
+import Pagination from '@/Shared/Components/Pagination.vue';
 import { formatStatus } from '@/lib/utils';
 
 const props = defineProps({
-    warga: Array,
+    warga: [Object, Array],
     filters: Object,
 });
+
+const items = computed(() => Array.isArray(props.warga) ? props.warga : (props.warga?.data ?? []));
 
 const page = usePage();
 const isSuperAdmin = computed(() => page.props.auth?.user?.role === 'SUPERADMIN');
@@ -239,7 +242,7 @@ function hapus(id) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            <tr v-for="w in warga" :key="w.id">
+                            <tr v-for="w in items" :key="w.id">
                                 <td class="px-4 py-3 font-medium text-gray-900">{{ w.unit_id }}</td>
                                 <td class="px-4 py-3 text-gray-900">{{ w.nama }}</td>
                                 <td class="px-4 py-3 text-gray-600">{{ w.no_wa }}</td>
@@ -266,12 +269,12 @@ function hapus(id) {
                                     <div class="flex justify-end gap-2">
                                         <SecondaryButton @click="bukaEdit(w)">Edit</SecondaryButton>
                                         <DangerButton :disabled="deletingId === w.id" @click="hapus(w.id)">
-                                            {{ deletingId === w.id ? 'Menghapus...' : 'Hapus' }}
+                                             {{ deletingId === w.id ? 'Menghapus...' : 'Hapus' }}
                                         </DangerButton>
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="warga.length === 0">
+                            <tr v-if="items.length === 0">
                                 <td :colspan="isSuperAdmin ? 7 : 6" class="px-4 py-10 text-center text-gray-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <svg class="h-10 w-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,6 +287,7 @@ function hapus(id) {
                             </tr>
                         </tbody>
                     </table>
+                    <Pagination :links="warga.links" />
                 </div>
             </div>
         </div>

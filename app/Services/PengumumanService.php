@@ -8,6 +8,7 @@ use App\Models\BroadcastJob;
 use App\Models\BroadcastLog;
 use App\Models\Pengumuman;
 use App\Models\Warga;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -15,9 +16,15 @@ class PengumumanService
 {
     public function __construct(private WahaService $wahaService) {}
 
-    public function getList(): Collection
+    public function getList(?int $perPage = null): Collection|LengthAwarePaginator
     {
-        return Pengumuman::query()->orderByDesc('created_at')->get();
+        $query = Pengumuman::query()->orderByDesc('created_at');
+
+        if ($perPage !== null) {
+            return $query->paginate($perPage)->withQueryString();
+        }
+
+        return $query->get();
     }
 
     /**

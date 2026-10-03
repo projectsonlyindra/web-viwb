@@ -16,9 +16,10 @@ class TagihanController extends Controller
     {
         $this->authorize('viewAny', Tagihan::class);
 
-        return response()->json([
-            'data' => $this->tagihanService->getList($request->user(), $request->only(['periode', 'jenis', 'status'])),
-        ]);
+        $perPage = $request->has('per_page') ? (int) $request->input('per_page') : 25;
+        $tagihan = $this->tagihanService->getList($request->user(), $request->only(['periode', 'jenis', 'status']), $perPage);
+
+        return response()->json($tagihan);
     }
 
     public function generate(Request $request): JsonResponse

@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePengumumanRequest;
 use App\Services\PengumumanService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PengumumanController extends Controller
 {
     public function __construct(private PengumumanService $pengumumanService) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(['data' => $this->pengumumanService->getList()]);
+        $perPage = $request->has('per_page') ? (int) $request->input('per_page') : 25;
+        $pengumuman = $this->pengumumanService->getList($perPage);
+
+        return response()->json($pengumuman);
     }
 
     public function store(StorePengumumanRequest $request): JsonResponse

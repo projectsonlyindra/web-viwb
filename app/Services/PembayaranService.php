@@ -8,6 +8,7 @@ use App\Enums\StatusTagihan;
 use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class PembayaranService
         private WahaService $wahaService,
     ) {}
 
-    public function getList(User $user, array $filters = []): BaseCollection
+    public function getList(User $user, array $filters = [], ?int $perPage = null): BaseCollection|LengthAwarePaginator
     {
         $query = Pembayaran::query()->with(['warga', 'item.tagihan']);
 
@@ -30,6 +31,10 @@ class PembayaranService
         }
 
         $query->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status));
+
+        if ($perPage !== null) {
+            return $query->orderByDesc('created_at')->paginate($perPage)->withQueryString();
+        }
 
         return $query->orderByDesc('created_at')->get();
     }

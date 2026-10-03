@@ -1,27 +1,42 @@
-*.log
-.DS_Store
+# Environment & Secrets
 .env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.codex
-/.cursor/
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/fonts-manifest.dev.json
-/public/hot
-/public/storage
+.env.*
+!.env.example
+.docker/
+*.log
+*.sqlite
+*.sqlite*
+
+# Internal QA Report (Lokal Only, tidak di-push ke git)
+docs/LAPORAN-QA-REVIEW.md
+docs/heidi-connection.txt
+
+# Laravel Framework & Composer
+/vendor
 /storage/*.key
 /storage/pail
-/vendor
+.phpunit.result.cache
+.phpunit.cache
+
+# Node / Frontend Build
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/public/fonts-manifest.dev.json
+
+# IDEs & System
+.DS_Store
+Thumbs.db
+/.idea
+/.vscode
+/.cursor/
+/.zed
 _ide_helper.php
 Homestead.json
 Homestead.yaml
-Thumbs.db
+
+# AI Agents & IDE Tooling
+.agents/
+.claude/
+skills-lock.json

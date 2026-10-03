@@ -1,16 +1,19 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Shared/Layouts/AuthenticatedLayout.vue';
 import InputLabel from '@/Shared/Components/InputLabel.vue';
 import InputError from '@/Shared/Components/InputError.vue';
 import PrimaryButton from '@/Shared/Components/PrimaryButton.vue';
 import TextInput from '@/Shared/Components/TextInput.vue';
+import Pagination from '@/Shared/Components/Pagination.vue';
 
-defineProps({
-    pengumuman: Array,
+const props = defineProps({
+    pengumuman: [Object, Array],
     canCreate: Boolean,
 });
+
+const items = computed(() => Array.isArray(props.pengumuman) ? props.pengumuman : (props.pengumuman?.data ?? []));
 
 const showForm = ref(false);
 
@@ -86,7 +89,7 @@ function submit() {
 
                 <div class="space-y-4">
                     <div
-                        v-for="p in pengumuman"
+                        v-for="p in items"
                         :key="p.id"
                         class="overflow-hidden bg-white p-6 shadow-sm sm:rounded-lg"
                     >
@@ -98,7 +101,7 @@ function submit() {
                         </div>
                         <p class="mt-2 whitespace-pre-line text-sm text-gray-600">{{ p.isi }}</p>
                     </div>
-                    <div v-if="pengumuman.length === 0" class="bg-white p-10 text-center text-sm text-gray-500 shadow-sm sm:rounded-lg">
+                    <div v-if="items.length === 0" class="bg-white p-10 text-center text-sm text-gray-500 shadow-sm sm:rounded-lg">
                         <div class="flex flex-col items-center justify-center">
                             <svg class="h-10 w-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
@@ -107,6 +110,7 @@ function submit() {
                             <p class="text-xs text-gray-400 mt-1">Pengumuman paguyuban dan RT akan ditampilkan di sini.</p>
                         </div>
                     </div>
+                    <Pagination :links="pengumuman.links" />
                 </div>
             </div>
         </div>

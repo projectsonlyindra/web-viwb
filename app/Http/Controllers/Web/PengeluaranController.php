@@ -22,7 +22,7 @@ class PengeluaranController extends Controller
         $user = $request->user();
 
         return Inertia::render('Pengeluaran/Index', [
-            'pengeluaran' => $this->pengeluaranService->getList($request->only(['status'])),
+            'pengeluaran' => $this->pengeluaranService->getList($request->only(['status']), 25),
             'filters' => $request->only(['status']),
             'canCreate' => $user->can('create', Pengeluaran::class),
             'userId' => $user->id,

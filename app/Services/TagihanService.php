@@ -13,6 +13,7 @@ use App\Models\Tagihan;
 use App\Models\User;
 use App\Models\Warga;
 use Carbon\Carbon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Log;
 
@@ -125,7 +126,7 @@ class TagihanService
      * Ambil daftar tagihan dengan total denda dihitung on-the-fly, diberi scope
      * sesuai role: WARGA hanya lihat miliknya, TIM_DIVISI hanya lihat sesuai divisinya.
      */
-    public function getList(User $user, array $filters = []): BaseCollection
+    public function getList(User $user, array $filters = [], ?int $perPage = null): BaseCollection|LengthAwarePaginator
     {
         $query = Tagihan::query()->with('warga');
 
@@ -143,7 +144,7 @@ class TagihanService
             ->when($filters['jenis'] ?? null, fn ($q, $jenis) => $q->where('jenis', $jenis))
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status));
 
-        return $query->orderByDesc('periode')->get()->map(function (Tagihan $tagihan) {
+        $transform = function (Tagihan $tagihan) {
             if ($tagihan->status === StatusTagihan::LUNAS) {
                 $tagihan->denda = 0;
                 $tagihan->total = $tagihan->nominal;
@@ -157,6 +158,12 @@ class TagihanService
             }
 
             return $tagihan;
-        });
+        };
+
+        if ($perPage !== null) {
+            return $query->orderByDesc('periode')->paginate($perPage)->withQueryString()->through($transform);
+        }
+
+        return $query->orderByDesc('periode')->get()->map($transform);
     }
 }

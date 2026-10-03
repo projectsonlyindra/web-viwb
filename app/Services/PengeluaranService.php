@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Enums\StatusPengeluaran;
 use App\Models\Pengeluaran;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -14,13 +15,18 @@ class PengeluaranService
 {
     public function __construct(private WahaService $wahaService) {}
 
-    public function getList(array $filters = []): Collection
+    public function getList(array $filters = [], ?int $perPage = null): Collection|LengthAwarePaginator
     {
-        return Pengeluaran::query()
+        $query = Pengeluaran::query()
             ->with(['dibuatOleh', 'disetujuiOleh'])
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
-            ->orderByDesc('created_at')
-            ->get();
+            ->orderByDesc('created_at');
+
+        if ($perPage !== null) {
+            return $query->paginate($perPage)->withQueryString();
+        }
+
+        return $query->get();
     }
 
     /**

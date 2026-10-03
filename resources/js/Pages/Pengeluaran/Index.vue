@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Shared/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Shared/Components/InputError.vue';
@@ -8,14 +8,17 @@ import PrimaryButton from '@/Shared/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Shared/Components/SecondaryButton.vue';
 import DangerButton from '@/Shared/Components/DangerButton.vue';
 import TextInput from '@/Shared/Components/TextInput.vue';
+import Pagination from '@/Shared/Components/Pagination.vue';
 import { formatStatus } from '@/lib/utils';
 
 const props = defineProps({
-    pengeluaran: Array,
+    pengeluaran: [Object, Array],
     filters: Object,
     canCreate: Boolean,
     userId: Number,
 });
+
+const items = computed(() => Array.isArray(props.pengeluaran) ? props.pengeluaran : (props.pengeluaran?.data ?? []));
 
 const page = usePage();
 
@@ -180,7 +183,7 @@ function kirimTolak(id) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            <template v-for="p in pengeluaran" :key="p.id">
+                            <template v-for="p in items" :key="p.id">
                                 <tr>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-gray-900">{{ p.kategori }}</div>
@@ -248,7 +251,7 @@ function kirimTolak(id) {
                                     </td>
                                 </tr>
                             </template>
-                            <tr v-if="pengeluaran.length === 0">
+                            <tr v-if="items.length === 0">
                                 <td colspan="6" class="px-4 py-10 text-center text-gray-500">
                                     <div class="flex flex-col items-center justify-center">
                                         <svg class="h-10 w-10 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,6 +264,7 @@ function kirimTolak(id) {
                             </tr>
                         </tbody>
                     </table>
+                    <Pagination :links="pengeluaran.links" />
                 </div>
             </div>
         </div>

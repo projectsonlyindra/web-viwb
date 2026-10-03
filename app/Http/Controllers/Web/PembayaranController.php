@@ -40,7 +40,7 @@ class PembayaranController extends Controller
             : [];
 
         return Inertia::render('Pembayaran/Index', [
-            'pembayaran' => $this->pembayaranService->getList($user, $request->only(['status'])),
+            'pembayaran' => $this->pembayaranService->getList($user, $request->only(['status']), 25),
             'filters' => $request->only(['status']),
             'tagihanBelumLunas' => $tagihanBelumLunas,
             'canConfirm' => in_array($user->role, [Role::SUPERADMIN, Role::BENDAHARA], true),
